@@ -1,0 +1,78 @@
+ELECTRICITY BILL - SAMPLE
+========================================
+
+POWER DISTRIBUTION COMPANY
+Customer Service: 1800-123-4567
+Website: www.powerdist.com
+
+========================================
+CONSUMER DETAILS
+========================================
+
+Consumer Number: 1234567890
+Consumer Name: JOHN DOE
+Address: 123 Main Street, Apartment 4B
+         Springfield, State - 560001
+Service Connection: Residential
+
+========================================
+BILLING INFORMATION
+========================================
+
+Bill Month: October 2024
+Billing Date: 01/11/2024
+Due Date: 15/11/2024
+
+Meter Number: SPF45678901
+Previous Reading: 8450
+Current Reading: 8850
+Previous Reading Date: 01/10/2024
+Current Reading Date: 31/10/2024
+
+========================================
+CONSUMPTION DETAILS
+========================================
+
+Total Units Consumed: 400 kWh
+Billing Days: 30 days
+Average Daily Consumption: 13.33 kWh
+
+========================================
+CHARGES BREAKDOWN
+========================================
+
+Energy Charges:
+  0-100 units @ ₹4.50/unit    : ₹450.00
+  101-200 units @ ₹6.00/unit  : ₹600.00
+  201-400 units @ ₹7.50/unit  : ₹1,500.00
+
+Fixed Charges                 : ₹100.00
+Electricity Duty @ 15%        : ₹382.50
+Fuel Adjustment Charges       : ₹120.00
+
+========================================
+TOTAL AMOUNT PAYABLE: ₹3,152.50
+========================================
+
+Payment Methods:
+- Online: www.powerdist.com/payment
+- Mobile App: PowerPay
+- Authorized Collection Centers
+
+Late Payment Charges: ₹50 after due date
+
+Thank you for using our services!
+For queries, call: 1800-123-4567
+Email: support@powerdist.com
+
+========================================
+ENERGY SAVING TIPS
+========================================
+
+1. Use LED bulbs instead of incandescent
+2. Set AC temperature to 24-26°C
+3. Unplug devices when not in use
+4. Use natural light during daytime
+5. Regular maintenance of appliances
+
+========================================

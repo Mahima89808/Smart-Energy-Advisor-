@@ -1,0 +1,21 @@
+appliance,wattage,hours_per_day,quantity
+Air Conditioner,1500,8,2
+Refrigerator,150,24,1
+Washing Machine,500,1,1
+Water Heater,2000,2,1
+Television,100,5,2
+Ceiling Fan,75,12,4
+LED Bulb,10,6,8
+Microwave Oven,1200,0.5,1
+Laptop,65,8,2
+Desktop Computer,200,6,1
+WiFi Router,10,24,1
+Water Pump,750,1,1
+Iron,1000,0.5,1
+Mixer Grinder,500,0.25,1
+Electric Kettle,1500,0.3,1
+Hair Dryer,1800,0.2,1
+Vacuum Cleaner,1400,0.5,1
+Gaming Console,150,3,1
+Printer,30,1,1
+Mobile Charger,10,3,3
