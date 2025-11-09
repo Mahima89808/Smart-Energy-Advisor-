@@ -116,8 +116,8 @@ def create_cost_comparison_chart(appliance_df: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         title='Energy Consumption vs Cost Comparison',
         xaxis=dict(title='Appliance', tickangle=-45),
-        yaxis=dict(title='Monthly Consumption (kWh)', titlefont=dict(color='lightblue')),
-        yaxis2=dict(title='Monthly Cost (₹)', titlefont=dict(color='lightcoral'), overlaying='y', side='right'),
+        yaxis=dict(title=dict(text='Monthly Consumption (kWh)', font=dict(color='lightblue'))),
+        yaxis2=dict(title=dict(text='Monthly Cost (₹)', font=dict(color='lightcoral')), overlaying='y', side='right'),
         barmode='group',
         hovermode='x unified'
     )
