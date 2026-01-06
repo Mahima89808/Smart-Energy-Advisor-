@@ -1,5 +1,3 @@
-# Smart-Energy-Advisor-
-
 # Smart AI Energy Advisor System ⚡
 
 An intelligent, AI-powered Streamlit web application that analyzes electricity bills and appliance usage data to provide personalized energy-saving recommendations.
