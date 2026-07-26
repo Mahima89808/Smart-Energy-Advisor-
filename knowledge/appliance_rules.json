@@ -1,0 +1,110 @@
+{
+    "metadata": {
+        "version": "1.0",
+        "description": "Smart Energy Advisor appliance efficiency knowledge base",
+        "created_for": "deterministic appliance suggestion engine"
+    },
+    "synonyms": {
+        "fridge": "refrigerator",
+        "ac": "air conditioner",
+        "aircon": "air conditioner",
+        "tv": "television",
+        "led tv": "television",
+        "fan": "fan",
+        "washing machine": "washing machine"
+    },
+    "exact_rules": {
+        "refrigerator": {
+            "category": "cooling",
+            "suggestion": {
+                "action": "Keep temperature settings optimized, clean coils regularly, and avoid unnecessary door opening.",
+                "saving_percentage": 10
+            }
+        },
+        "air conditioner": {
+            "category": "cooling",
+            "suggestion": {
+                "action": "Use efficient temperature settings, clean filters regularly, and reduce unnecessary operating hours.",
+                "saving_percentage": 15
+            }
+        },
+        "television": {
+            "category": "electronics",
+            "suggestion": {
+                "action": "Reduce standby usage, enable energy-saving mode, and avoid leaving the TV switched on unnecessarily.",
+                "saving_percentage": 8
+            }
+        },
+        "washing machine": {
+            "category": "washing",
+            "suggestion": {
+                "action": "Run full loads, use appropriate wash cycles, and avoid unnecessary repeated washing.",
+                "saving_percentage": 12
+            }
+        }
+    },
+    "category_rules": {
+        "cooling": {
+            "keywords": [
+                "compressor",
+                "cooler",
+                "cooling"
+            ],
+            "suggestion": {
+                "action": "Improve maintenance, optimize temperature settings, and reduce unnecessary running time.",
+                "saving_percentage": 10
+            }
+        },
+        "heating": {
+            "keywords": [
+                "heater",
+                "heating",
+                "geyser"
+            ],
+            "suggestion": {
+                "action": "Reduce heating duration, improve insulation, and avoid unnecessary operation.",
+                "saving_percentage": 12
+            }
+        },
+        "electronics": {
+            "keywords": [
+                "monitor",
+                "display",
+                "screen",
+                "computer"
+            ],
+            "suggestion": {
+                "action": "Enable power-saving settings and reduce standby electricity consumption.",
+                "saving_percentage": 8
+            }
+        },
+        "motor": {
+            "keywords": [
+                "motor",
+                "pump",
+                "fan"
+            ],
+            "suggestion": {
+                "action": "Maintain equipment properly and avoid unnecessary operating hours.",
+                "saving_percentage": 10
+            }
+        },
+        "lighting": {
+            "keywords": [
+                "light",
+                "lamp",
+                "bulb"
+            ],
+            "suggestion": {
+                "action": "Replace inefficient lighting and switch off lights when not required.",
+                "saving_percentage": 15
+            }
+        }
+    },
+    "generic_rule": {
+        "suggestion": {
+            "action": "Reduce unnecessary operating time, avoid standby power consumption, and improve usage efficiency.",
+            "saving_percentage": 5
+        }
+    }
+}
