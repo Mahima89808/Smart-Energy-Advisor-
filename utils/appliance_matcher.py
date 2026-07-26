@@ -198,6 +198,7 @@ def match_category_rule(
 
     return {
         "match_type": "category",
+        "matched_name": best_match["keyword"],
         "category": best_match["category"],
         "keyword": best_match["keyword"],
         "rule": best_match["rule"]
