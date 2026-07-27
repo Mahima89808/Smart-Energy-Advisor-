@@ -8,3 +8,4 @@ pytesseract>=0.3.13
 pillow>=10.0.0
 plotly>=6.4.0
 requests>=2.32.0
+httpx2

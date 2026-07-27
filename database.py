@@ -312,6 +312,20 @@ def create_saved_record(
 
         saved_time = datetime.now().isoformat()
 
+        label = bill_data.get("label")
+
+        if not label:
+            bill_month = bill_data.get("bill_month")
+            consumer_name = bill_data.get("consumer_name")
+
+            if consumer_name and bill_month:
+                label = f"{consumer_name} - {bill_month}"
+
+            elif bill_month:
+                label = bill_month
+
+            else:
+                label = f"Saved Analysis {saved_time[:10]}"
         cursor.execute(
             """
             INSERT INTO saved_records
@@ -332,7 +346,7 @@ def create_saved_record(
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                bill_data.get("label"),
+                label,   
                 bill_data.get("consumer_no"),
                 bill_data.get("consumer_name"),
                 bill_data.get("bill_month"),
