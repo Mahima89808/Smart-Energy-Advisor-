@@ -25,9 +25,8 @@ import re
 from typing import Dict, Any
 
 import pdfplumber
-from PIL import Image
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+
 
 DEFAULT_BILL_DATA: Dict[str, Any] = {
     "consumer_no": "N/A",
@@ -51,33 +50,116 @@ CSV_EXPECTED_COLUMNS = TEXT_FIELDS + NUMERIC_FIELDS
 # Shared: text parsing (used by PDF + OCR)
 # --------------------------------------------------
 
+CONSUMER_NO_PATTERNS = [
+
+    r'Consumer\s*(?:No|Number|ID)\.?\s*[:\-]?\s*([A-Z0-9\-]+)',
+
+    r'ConsumerNo\.\s*([A-Z0-9\-]+)',
+
+    r'Account\s*Number\s*[:\-]?\s*([A-Z0-9\-]+)',
+
+    r'Service\s*Number\s*[:\-]?\s*([A-Z0-9\-]+)',
+
+]
+
+
+def _find_first_match(
+    patterns: list[str],
+    text: str
+) -> str | None:
+    """
+    Searches the text using multiple regex patterns and
+    returns the first matched value.
+
+    Args:
+        patterns:
+            List of regex patterns.
+
+        text:
+            Extracted bill text.
+
+    Returns:
+        First matched value, or None if no pattern matches.
+    """
+
+    for pattern in patterns:
+
+        match = re.search(
+            pattern,
+            text,
+            re.IGNORECASE
+        )
+
+        if match:
+
+            return match.group(1).strip()
+
+    return None
+
+
 def _parse_bill_text(text: str) -> Dict[str, Any]:
     """
-    Runs the field-extraction regexes against raw text.
-    Used by both the PDF path and the OCR path, since both
-    end up with plain text to search once the source is read.
+    Runs the field-extraction regexes against text extracted from a PDF electricity bill.
 
     Returns only the fields that were actually found.
     """
 
     raw: Dict[str, Any] = {}
 
-    consumer_match = re.search(
-        r'Consumer\s*(?:No|Number|ID)[:\s]*([A-Z0-9\-]+)', text, re.IGNORECASE
+    consumer_no = _find_first_match(
+    CONSUMER_NO_PATTERNS,
+    text
     )
-    if consumer_match:
-        raw["consumer_no"] = consumer_match.group(1).strip()
 
+    if consumer_no:
+
+        raw["consumer_no"] = consumer_no
+
+    # Standard formats:
+    # Consumer Name:
+    # Name:
     name_match = re.search(
-        r'(?:Consumer\s*)?Name[:\s]*([A-Za-z\s\.]+)(?:\n|Consumer)', text, re.IGNORECASE
+        r'Mr\./Ms\.?([A-Z\-]+?)\s+MeterserialNo',
+        text,
+        re.IGNORECASE
     )
+
     if name_match:
         raw["consumer_name"] = name_match.group(1).strip()
 
+    
+    if "consumer_name" not in raw:
+
+        name_match = re.search(
+            r'Mr\./Ms\.?\s*([A-Z\s]+?)\s+MeterserialNo',
+            text,
+            re.IGNORECASE
+        )
+
+        if name_match:
+            name = (
+                name_match.group(1)
+                .replace("-", " ")
+                .strip()
+            )
+
+            # Remove common prefixes
+            name = re.sub(
+                r"^(SH|SMT|MR|MRS|MS)\s*",
+                "",
+                name,
+                flags=re.IGNORECASE
+            )
+
+            raw["consumer_name"] = name.title()
+            
+        
+
     month_match = re.search(
         r'(?:Bill(?:ing)?\s*(?:Period|Month|Date)|For\s*the\s*(?:month|period)\s*of)'
-        r'[:\s]*([A-Za-z]+\s*\d{4}|\d{1,2}/\d{4})',
-        text, re.IGNORECASE
+        r'[:\s]*([A-Za-z]{3,9}[-\s]?\d{4}|\d{1,2}/\d{4})',
+        text,
+        re.IGNORECASE
     )
     if month_match:
         raw["bill_month"] = month_match.group(1).strip()
@@ -100,21 +182,52 @@ def _parse_bill_text(text: str) -> Dict[str, Any]:
     if units_match:
         raw["metered_units"] = units_match.group(1)
 
-    amount_match = re.search(
+
+    amount_patterns = [
+        r'TotalAmountPayable(?:TillDueDate|AfterDueDate)?[:\s]*INR\s*(\d+(?:\.\d+)?)',
+        r'CurrentMonthBillAmount[:\s]*(\d+(?:\.\d+)?)',
+        r'TotalAmountPayable[:\s]*(\d+(?:\.\d+)?)',
         r'(?:Total\s*(?:Amount|Bill)|Amount\s*Payable|Net\s*Amount)'
-        r'[:\s]*(?:Rs\.?|₹|\$)?\s*(\d+(?:,\d{3})*(?:\.\d{2})?)',
-        text, re.IGNORECASE
-    )
+        r'[:\s]*(?:Rs\.?|₹|\$|INR)?\s*(\d+(?:,\d{3})*(?:\.\d+)?)'
+    ]
+
+    for pattern in amount_patterns:
+        amount_match = re.search(pattern, text, re.IGNORECASE)
+        if amount_match:
+            raw["total_amount"] = amount_match.group(1).replace(",", "")
+            break
     if amount_match:
         raw["total_amount"] = amount_match.group(1).replace(",", "")
 
-    prev_reading_match = re.search(r'Previous\s*Reading[:\s]*(\d+)', text, re.IGNORECASE)
-    if prev_reading_match:
-        raw["previous_reading"] = prev_reading_match.group(1)
+        prev_reading_match = re.search(
+            r'Previous\s*Reading[:\s]*(\d+)',
+            text,
+            re.IGNORECASE
+        )
 
-    current_reading_match = re.search(r'Current\s*Reading[:\s]*(\d+)', text, re.IGNORECASE)
-    if current_reading_match:
-        raw["current_reading"] = current_reading_match.group(1)
+        if prev_reading_match:
+            raw["previous_reading"] = prev_reading_match.group(1)
+
+        current_reading_match = re.search(
+            r'Current\s*Reading[:\s]*(\d+)',
+            text,
+            re.IGNORECASE
+        )
+
+        if current_reading_match:
+            raw["current_reading"] = current_reading_match.group(1)
+        
+
+        if "total_amount" not in raw:
+
+            amount = re.search(
+                r'Current\s*Month\s*Bill\s*Amount[^0-9]*(\d+\.\d+)',
+                text,
+                re.IGNORECASE
+            )
+
+            if amount:
+                raw["total_amount"] = amount.group(1)
 
     return raw
 
@@ -186,20 +299,30 @@ def extract_bill_data(pdf_file) -> Dict[str, Any]:
     """
     Extracts bill data from an uploaded PDF.
 
-    Raises ValueError if the PDF has no extractable text
-    (scanned, empty, or password-protected) instead of silently
-    returning all-default values.
+    Strategy:
+
+    1. Extract raw text using pdfplumber
+    2. Run normal regex extraction
+    3. If important fields are missing, use fallback parsing
+       for table-based electricity bills.
+    4. Normalize and validate.
     """
 
     try:
         with pdfplumber.open(pdf_file) as pdf:
+
             full_text = ""
+
             for page in pdf.pages:
                 page_text = page.extract_text()
+
                 if page_text:
                     full_text += page_text + "\n"
+
     except Exception as error:
-        raise ValueError(f"Unable to read PDF file: {error}") from error
+        raise ValueError(
+            f"Unable to read PDF file: {error}"
+        ) from error
 
     if not full_text.strip():
         raise ValueError(
@@ -207,54 +330,129 @@ def extract_bill_data(pdf_file) -> Dict[str, Any]:
             "(it may be scanned, empty, or password-protected)."
         )
 
+    # --------------------------------------------------
+    # Normal regex extraction
+    # --------------------------------------------------
+
     raw = _parse_bill_text(full_text)
+
+    # --------------------------------------------------
+    # Fallback 1
+    # MPPKVVCL-style Reading Detail table
+    #
+    # Example:
+    #
+    # 52284.00 08-07-2025 51863.00 1 421.00 0.00 421.00 13.58
+    #
+    # current reading
+    # reading date
+    # previous reading
+    # MF
+    # metered units
+    # assessed units
+    # final units
+    # average/day
+    # --------------------------------------------------
+
+    if (
+        "metered_units" not in raw
+        or float(raw.get("metered_units", 0)) == 0
+    ):
+
+        table_match = re.search(
+            r"(\d+\.\d+)\s+"
+            r"\d{2}-\d{2}-\d{4}\s+"
+            r"(\d+\.\d+)\s+"
+            r"\d+\s+"
+            r"(\d+\.\d+)\s+"
+            r"\d+\.\d+\s+"
+            r"\d+\.\d+\s+"
+            r"\d+\.\d+",
+            full_text
+        )
+
+        if table_match:
+
+            raw["current_reading"] = table_match.group(1)
+
+            raw["previous_reading"] = table_match.group(2)
+
+            raw["metered_units"] = table_match.group(3)
+
+    # --------------------------------------------------
+    # Fallback 2
+    # Consumer Name
+    # --------------------------------------------------
+
+    if "consumer_name" not in raw:
+
+        name_match = re.search(
+            r"Mr\./Ms\.?\s*([A-Z][A-Z\s]+)",
+            full_text,
+            re.IGNORECASE
+        )
+
+        if name_match:
+
+            raw["consumer_name"] = (
+                name_match.group(1)
+                .replace("-", " ")
+                .title()
+                .strip()
+            )
+
+    # --------------------------------------------------
+    # Fallback 3
+    # Bill Month
+    # --------------------------------------------------
+
+    if "bill_month" not in raw:
+
+        month_match = re.search(
+            r"BillMonth[:\s]*([A-Z]{3}-\d{4})",
+            full_text,
+            re.IGNORECASE
+        )
+
+        if month_match:
+
+            raw["bill_month"] = month_match.group(1)
+
+    # --------------------------------------------------
+    # Normalize
+    # --------------------------------------------------
+
     return _normalize_extracted_fields(raw)
 
 
 def extract_text_from_pdf(pdf_file) -> str:
     """
-    Extracts raw text from a PDF file. Debugging/inspection helper,
-    not part of the bill data contract.
+    Extracts raw text from a PDF file.
+    Debugging helper.
     """
+
     try:
+
         with pdfplumber.open(pdf_file) as pdf:
+
             full_text = ""
+
             for page in pdf.pages:
+
                 page_text = page.extract_text()
+
                 if page_text:
                     full_text += page_text + "\n"
-            return full_text
-    except Exception as e:
-        return f"Error extracting text: {str(e)}"
 
+        return full_text
 
-# --------------------------------------------------
-# Path 2: Image OCR
-# --------------------------------------------------
-
-def extract_bill_data_from_image(image_file) -> Dict[str, Any]:
-    """
-    Extracts bill data from a scanned bill image using OCR.
-    Reuses the same field regexes as the PDF path (_parse_bill_text)
-    rather than a separate OCR-specific pattern set.
-    """
-
-    try:
-        image = Image.open(image_file)
     except Exception as error:
-        raise ValueError(f"Unable to read image file: {error}") from error
 
-    text = pytesseract.image_to_string(image)
-
-    if not text or not text.strip():
-        raise ValueError("No readable text found in image (OCR returned empty result).")
-
-    raw = _parse_bill_text(text)
-    return _normalize_extracted_fields(raw)
+        return f"Error extracting text: {error}"
 
 
 # --------------------------------------------------
-# Path 3: CSV import
+# Path 2: CSV import
 # --------------------------------------------------
 
 def extract_bill_data_from_csv(csv_file) -> Dict[str, Any]:
@@ -283,7 +481,7 @@ def extract_bill_data_from_csv(csv_file) -> Dict[str, Any]:
 
 
 # --------------------------------------------------
-# Path 4: Manual entry
+# Path 3: Manual entry
 # --------------------------------------------------
 
 def build_manual_bill_data(fields: Dict[str, Any]) -> Dict[str, Any]:
