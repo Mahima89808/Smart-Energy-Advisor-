@@ -87,19 +87,6 @@ def extract_bill_pdf(file):
     )
 
 
-def extract_bill_image(file):
-    return _request(
-        "POST",
-        "/extract-bill/image",
-        files={
-            "file": (
-                file.name,
-                file,
-                file.type
-            )
-        }
-    )
-
 
 def extract_bill_csv(file):
     return _request(
