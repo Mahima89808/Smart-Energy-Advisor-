@@ -19,7 +19,9 @@ Uses:
 - utils.suggestions
 """
 
+from contextlib import asynccontextmanager
 from typing import List, Dict, Any, Optional
+
 
 from fastapi import (
     FastAPI,
@@ -50,7 +52,6 @@ from database import (
 
 from utils.extract_data import (
     extract_bill_data,
-    extract_bill_data_from_image,
     extract_bill_data_from_csv,
     build_manual_bill_data
 )
@@ -61,20 +62,18 @@ from utils.suggestions import (
 )
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    initialize_database()
+    yield
+
+
 app = FastAPI(
     title="Smart Energy Advisor API",
     version="1.0.0",
-    description="Offline electricity consumption analysis API"
+    description="Offline electricity consumption analysis API",
+    lifespan=lifespan
 )
-
-
-# --------------------------------------------------
-# Startup
-# --------------------------------------------------
-
-@app.on_event("startup")
-def startup_event():
-    initialize_database()
 
 
 # --------------------------------------------------
@@ -100,7 +99,7 @@ class RenameRecordRequest(BaseModel):
 
 class SuggestionRequest(BaseModel):
     appliances: List[Dict[str, Any]]
-    bill_data: Dict[str, float]
+    bill_data: Dict[str, Any]
 
 
 class ManualBillEntry(BaseModel):
@@ -173,16 +172,6 @@ async def extract_bill(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(error))
 
 
-@app.post("/extract-bill/image")
-async def extract_bill_image(file: UploadFile = File(...)):
-    try:
-        return extract_bill_data_from_image(file.file)
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error))
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=str(error))
-
-
 @app.post("/extract-bill/csv")
 async def extract_bill_csv(file: UploadFile = File(...)):
     try:
@@ -196,15 +185,7 @@ async def extract_bill_csv(file: UploadFile = File(...)):
 @app.post("/extract-bill/manual")
 def extract_bill_manual(entry: ManualBillEntry):
     try:
-        return build_manual_bill_data(entry.dict(exclude_none=True))
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error))
-
-
-@app.post("/extract-bill")
-async def extract_bill(file: UploadFile = File(...)):
-    try:
-        return extract_bill_data(file.file)
+        return build_manual_bill_data(entry.model_dump(exclude_none=True))
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
 
