@@ -32,6 +32,7 @@ st.set_page_config(
 )
 
 render_sidebar()
+session_id = st.session_state.session_id
 
 st.title("💡 Energy Saving Suggestions")
 
@@ -325,6 +326,7 @@ if st.button(
         )
 
         result = save_record(
+            session_id,
             bill_data,
             appliance_snapshot
         )
