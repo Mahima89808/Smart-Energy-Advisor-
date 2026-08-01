@@ -41,6 +41,7 @@ st.set_page_config(
 )
 
 render_sidebar()
+session_id = st.session_state.session_id
 
 st.title("🏠 Home - Upload & Extract Data")
 
@@ -66,6 +67,12 @@ if "appliance_data" not in st.session_state:
 
 if "appliance_editor_version" not in st.session_state:
     st.session_state.appliance_editor_version = 0
+
+if "last_processed_bill_pdf" not in st.session_state:
+    st.session_state.last_processed_bill_pdf = None
+
+if "last_processed_bill_csv" not in st.session_state:
+    st.session_state.last_processed_bill_csv = None
 
 
 BILL_CSV_COLUMNS = [
@@ -124,16 +131,21 @@ with left_column:
                 type=["pdf"],
                 key="pdf_bill",
             )
-
             if uploaded_bill is not None:
-                try:
-                    with st.spinner("Extracting bill data..."):
-                        st.session_state.bill_data = extract_bill_pdf(uploaded_bill)
+                file_signature = getattr(uploaded_bill, "file_id", None) or f"{uploaded_bill.name}-{uploaded_bill.size}"
+
+                if st.session_state.last_processed_bill_pdf != file_signature:
+                    try:
+                        with st.spinner("Extracting bill data..."):
+                            st.session_state.bill_data = extract_bill_pdf(uploaded_bill)
+                        st.session_state.last_processed_bill_pdf = file_signature
+                        st.success("Bill extracted successfully.")
+                    except requests.ConnectionError:
+                        _connection_error_message()
+                    except Exception as error:
+                        st.error(str(error))
+                else:
                     st.success("Bill extracted successfully.")
-                except requests.ConnectionError:
-                    _connection_error_message()
-                except Exception as error:
-                    st.error(str(error))
 
         # ----------------------------------------------------
         # CSV
@@ -151,38 +163,38 @@ with left_column:
                 mime="text/csv",
             )
 
-            uploaded_bill = st.file_uploader(
-                "Upload Bill CSV",
-                type=["csv"],
-                key="csv_bill",
-            )
-
             if uploaded_bill is not None:
-                try:
-                    preview_df = pd.read_csv(uploaded_bill)
-                    uploaded_bill.seek(0)
+                file_signature = getattr(uploaded_bill, "file_id", None) or f"{uploaded_bill.name}-{uploaded_bill.size}"
 
-                    matched = [c for c in BILL_CSV_COLUMNS if c in preview_df.columns]
-                    missing = [c for c in BILL_CSV_COLUMNS if c not in preview_df.columns]
+                if st.session_state.last_processed_bill_csv != file_signature:
+                    try:
+                        preview_df = pd.read_csv(uploaded_bill)
+                        uploaded_bill.seek(0)
 
-                    if not matched:
-                        st.error(
-                            "None of the expected columns were found in this CSV.\n\n"
-                            f"Found columns: {', '.join(preview_df.columns)}\n\n"
-                            f"Expected (any subset): {', '.join(BILL_CSV_COLUMNS)}"
-                        )
-                    else:
-                        if missing:
-                            st.info(f"These columns are missing and will default: {', '.join(missing)}")
+                        matched = [c for c in BILL_CSV_COLUMNS if c in preview_df.columns]
+                        missing = [c for c in BILL_CSV_COLUMNS if c not in preview_df.columns]
 
-                        with st.spinner("Extracting bill data..."):
-                            st.session_state.bill_data = extract_bill_csv(uploaded_bill)
-                        st.success("Bill extracted successfully.")
+                        if not matched:
+                            st.error(
+                                "None of the expected columns were found in this CSV.\n\n"
+                                f"Found columns: {', '.join(preview_df.columns)}\n\n"
+                                f"Expected (any subset): {', '.join(BILL_CSV_COLUMNS)}"
+                            )
+                        else:
+                            if missing:
+                                st.info(f"These columns are missing and will default: {', '.join(missing)}")
 
-                except requests.ConnectionError:
-                    _connection_error_message()
-                except Exception as error:
-                    st.error(str(error))
+                            with st.spinner("Extracting bill data..."):
+                                st.session_state.bill_data = extract_bill_csv(uploaded_bill)
+                            st.session_state.last_processed_bill_csv = file_signature
+                            st.success("Bill extracted successfully.")
+
+                    except requests.ConnectionError:
+                        _connection_error_message()
+                    except Exception as error:
+                        st.error(str(error))
+                else:
+                    st.success("Bill extracted successfully.")
 
         # ----------------------------------------------------
         # Manual
@@ -299,7 +311,7 @@ with right_column:
             st.write("")
             if st.button("📋 Previous Appliances List", use_container_width=True):
                 try:
-                    saved_appliances = get_appliances()
+                    saved_appliances = get_appliances(session_id)
                     if saved_appliances:
                         st.session_state.appliance_data = pd.DataFrame(saved_appliances)[APPLIANCE_COLUMNS]
                         st.success(f"Loaded {len(saved_appliances)} saved appliance(s).")
@@ -314,36 +326,40 @@ with right_column:
                     st.error(str(error))
 
         if uploaded_csv is not None:
-            try:
-                dataframe = pd.read_csv(uploaded_csv)
+            file_signature = getattr(uploaded_csv, "file_id", None) or f"{uploaded_csv.name}-{uploaded_csv.size}"
 
-                if "appliance" in dataframe.columns and "name" not in dataframe.columns:
-                    dataframe = dataframe.rename(columns={"appliance": "name"})
+            if st.session_state.get("last_processed_appliance_csv") != file_signature:
+                try:
+                    dataframe = pd.read_csv(uploaded_csv)
 
-                if "category" not in dataframe.columns:
-                    dataframe["category"] = "General"
+                    if "appliance" in dataframe.columns and "name" not in dataframe.columns:
+                        dataframe = dataframe.rename(columns={"appliance": "name"})
 
-                required_columns = ["name", "wattage", "hours_per_day", "quantity"]
-                missing_columns = [c for c in required_columns if c not in dataframe.columns]
+                    if "category" not in dataframe.columns:
+                        dataframe["category"] = "General"
 
-                if missing_columns:
-                    st.error("Missing column(s): " + ", ".join(missing_columns))
-                else:
-                    dataframe["wattage"] = pd.to_numeric(dataframe["wattage"], errors="raise")
-                    dataframe["hours_per_day"] = pd.to_numeric(dataframe["hours_per_day"], errors="raise")
-                    dataframe["quantity"] = pd.to_numeric(dataframe["quantity"], errors="raise")
+                    required_columns = ["name", "wattage", "hours_per_day", "quantity"]
+                    missing_columns = [c for c in required_columns if c not in dataframe.columns]
 
-                    if "id" not in dataframe.columns:
-                        dataframe["id"] = None
+                    if missing_columns:
+                        st.error("Missing column(s): " + ", ".join(missing_columns))
+                    else:
+                        dataframe["wattage"] = pd.to_numeric(dataframe["wattage"], errors="raise")
+                        dataframe["hours_per_day"] = pd.to_numeric(dataframe["hours_per_day"], errors="raise")
+                        dataframe["quantity"] = pd.to_numeric(dataframe["quantity"], errors="raise")
 
-                    dataframe = dataframe[APPLIANCE_COLUMNS]
+                        if "id" not in dataframe.columns:
+                            dataframe["id"] = None
 
-                    st.session_state.appliance_data = dataframe
-                    st.session_state.appliance_editor_version += 1
-                    st.success(f"{len(dataframe)} appliance(s) loaded from CSV. Click Save below to store them.")
+                        dataframe = dataframe[APPLIANCE_COLUMNS]
 
-            except Exception as error:
-                st.error(str(error))
+                        st.session_state.appliance_data = dataframe
+                        st.session_state.appliance_editor_version += 1
+                        st.session_state["last_processed_appliance_csv"] = file_signature
+                        st.success(f"{len(dataframe)} appliance(s) loaded from CSV. Click Save below to store them.")
+
+                except Exception as error:
+                    st.error(str(error))
 
         st.markdown("---")
 
@@ -373,18 +389,17 @@ with right_column:
 
         if st.button("💾 Save Appliance List", type="primary"):
             try:
-                original_ids = set(
-                    pd.to_numeric(original_appliance_df["id"], errors="coerce").dropna().astype(int)
-                ) if "id" in original_appliance_df.columns else set()
+                backend_appliances = get_appliances(session_id)
+                backend_ids = {a["id"] for a in backend_appliances}
 
                 edited_ids = set(
                     pd.to_numeric(edited_df["id"], errors="coerce").dropna().astype(int)
                 ) if "id" in edited_df.columns else set()
 
-                removed_ids = original_ids - edited_ids
+                removed_ids = backend_ids - edited_ids
 
                 for appliance_id in removed_ids:
-                    delete_appliance(appliance_id)
+                    delete_appliance(session_id, appliance_id)
 
                 saved_count = 0
 
@@ -408,16 +423,16 @@ with right_column:
 
                     row_id = row.get("id")
 
-                    if pd.notna(row_id):
-                        update_appliance(int(row_id), payload)
+                    if pd.notna(row_id) and int(row_id) in backend_ids:
+                        update_appliance(session_id, int(row_id), payload)
                     else:
-                        create_appliance(payload)
+                        create_appliance(session_id, payload)
 
                     saved_count += 1
 
-                st.success(f"Saved. {saved_count} appliance(s) in list, {len(removed_ids)} deleted.")
+                st.success(f"Saved. {saved_count} appliance(s) in list, {len(removed_ids)} removed.")
 
-                st.session_state.appliance_data = pd.DataFrame(get_appliances())[APPLIANCE_COLUMNS]
+                st.session_state.appliance_data = pd.DataFrame(get_appliances(session_id))[APPLIANCE_COLUMNS]
                 st.session_state.appliance_editor_version += 1
                 st.rerun()
 
@@ -425,7 +440,6 @@ with right_column:
                 _connection_error_message()
             except Exception as error:
                 st.error(str(error))
-
 
 # --------------------------------------------------
 # Summary
