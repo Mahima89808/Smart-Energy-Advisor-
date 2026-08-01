@@ -43,9 +43,20 @@ def get_connection():
     return connection
 
 
+def _add_column_if_missing(connection, table: str, column: str, definition: str):
+    cursor = connection.cursor()
+    cursor.execute(f"PRAGMA table_info({table})")
+    existing_columns = {row[1] for row in cursor.fetchall()}
+
+    if column not in existing_columns:
+        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+        connection.commit()
+
+
 def initialize_database():
     """
-    Creates all required database tables.
+    Creates all required database tables, and adds any
+    columns that are missing from an older schema version.
     """
 
     connection = get_connection()
@@ -56,6 +67,7 @@ def initialize_database():
         """
         CREATE TABLE IF NOT EXISTS appliances (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL DEFAULT '',
             name TEXT NOT NULL,
             category TEXT,
             wattage REAL NOT NULL,
@@ -71,6 +83,7 @@ def initialize_database():
         """
         CREATE TABLE IF NOT EXISTS saved_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL DEFAULT '',
             label TEXT NOT NULL,
             consumer_no TEXT,
             consumer_name TEXT,
@@ -109,10 +122,14 @@ def initialize_database():
 
     connection.commit()
 
+    _add_column_if_missing(connection, "appliances", "session_id", "TEXT NOT NULL DEFAULT ''")
+    _add_column_if_missing(connection, "saved_records", "session_id", "TEXT NOT NULL DEFAULT ''")
+
     connection.close()
 
 
 def create_appliance(
+    session_id: str,
     name: str,
     category: str,
     wattage: float,
@@ -133,6 +150,7 @@ def create_appliance(
         """
         INSERT INTO appliances
         (
+            session_id,
             name,
             category,
             wattage,
@@ -141,9 +159,10 @@ def create_appliance(
             created_at,
             updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
+            session_id,
             name,
             category,
             wattage,
@@ -163,9 +182,9 @@ def create_appliance(
     return appliance_id
 
 
-def get_all_appliances():
+def get_all_appliances(session_id: str):
     """
-    Returns all stored appliances.
+    Returns all stored appliances for a given session.
     """
 
     connection = get_connection()
@@ -176,8 +195,10 @@ def get_all_appliances():
         """
         SELECT *
         FROM appliances
+        WHERE session_id = ?
         ORDER BY id ASC
-        """
+        """,
+        (session_id,)
     )
 
     rows = cursor.fetchall()
@@ -188,9 +209,9 @@ def get_all_appliances():
 
 
 
-def get_appliance_by_id(appliance_id: int):
+def get_appliance_by_id(session_id: str, appliance_id: int):
     """
-    Returns one appliance by id.
+    Returns one appliance by id, , scoped to the given session.
     """
 
     connection = get_connection()
@@ -201,9 +222,9 @@ def get_appliance_by_id(appliance_id: int):
         """
         SELECT *
         FROM appliances
-        WHERE id = ?
+        WHERE id = ? AND session_id = ?
         """,
-        (appliance_id,)
+        (appliance_id, session_id)
     )
 
     row = cursor.fetchone()
@@ -218,6 +239,7 @@ def get_appliance_by_id(appliance_id: int):
 
 
 def update_appliance(
+    session_id: str,
     appliance_id: int,
     name: str,
     category: str,
@@ -226,7 +248,7 @@ def update_appliance(
     quantity: int
 ):
     """
-    Updates an existing appliance.
+    Updates an existing appliance, scoped to the given session.
     """
 
     connection = get_connection()
@@ -245,7 +267,7 @@ def update_appliance(
             hours_per_day = ?,
             quantity = ?,
             updated_at = ?
-        WHERE id = ?
+        WHERE id = ? AND session_id = ?
         """,
         (
             name,
@@ -254,7 +276,8 @@ def update_appliance(
             hours_per_day,
             quantity,
             updated_time,
-            appliance_id
+            appliance_id,
+            session_id
         )
     )
 
@@ -267,9 +290,9 @@ def update_appliance(
     return affected_rows > 0
 
 
-def delete_appliance(appliance_id: int):
+def delete_appliance(session_id: str, appliance_id: int):
     """
-    Deletes an appliance.
+    Deletes an appliance, scoped to the given session.
     """
 
     connection = get_connection()
@@ -279,9 +302,9 @@ def delete_appliance(appliance_id: int):
     cursor.execute(
         """
         DELETE FROM appliances
-        WHERE id = ?
+        WHERE id = ? AND session_id = ?
         """,
-        (appliance_id,)
+        (appliance_id, session_id)
     )
 
     connection.commit()
@@ -294,6 +317,7 @@ def delete_appliance(appliance_id: int):
 
 
 def create_saved_record(
+    session_id: str,
     bill_data: Dict[str, Any],
     appliance_snapshot: List[Dict[str, Any]]
 ):
@@ -330,6 +354,7 @@ def create_saved_record(
             """
             INSERT INTO saved_records
             (
+                session_id,
                 label,
                 consumer_no,
                 consumer_name,
@@ -343,9 +368,10 @@ def create_saved_record(
                 source_type,
                 saved_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                session_id,
                 label,   
                 bill_data.get("consumer_no"),
                 bill_data.get("consumer_name"),
@@ -362,6 +388,9 @@ def create_saved_record(
         )
 
         saved_record_id = cursor.lastrowid
+
+        # (keep everything below this exactly as it was — the
+        # saved_record_appliances loop, commit, except, finally)
 
 
         for appliance in appliance_snapshot:
@@ -408,9 +437,9 @@ def create_saved_record(
 
 
 
-def get_saved_records():
+def get_saved_records(session_id: str):
     """
-    Returns all saved analysis records.
+    Returns all saved analysis records for a given session.
     """
 
     connection = get_connection()
@@ -421,8 +450,10 @@ def get_saved_records():
         """
         SELECT *
         FROM saved_records
+        WHERE session_id = ?
         ORDER BY id DESC
-        """
+        """,
+        (session_id,)
     )
 
     rows = cursor.fetchall()
@@ -433,10 +464,11 @@ def get_saved_records():
 
 
 
-def get_saved_record_by_id(record_id: int):
+def get_saved_record_by_id(session_id: str, record_id: int):
     """
     Returns complete saved analysis:
     bill snapshot + appliance snapshot.
+    Scoped to the given session.
     """
 
     connection = get_connection()
@@ -448,9 +480,9 @@ def get_saved_record_by_id(record_id: int):
         """
         SELECT *
         FROM saved_records
-        WHERE id = ?
+        WHERE id = ? AND session_id = ?
         """,
-        (record_id,)
+        (record_id, session_id)
     )
 
     record = cursor.fetchone()
@@ -490,11 +522,12 @@ def get_saved_record_by_id(record_id: int):
 
 
 def rename_saved_record(
+    session_id: str,
     record_id: int,
     new_label: str
 ):
     """
-    Updates saved record label only.
+    Updates saved record label only, scoped to the given session.
     """
 
     connection = get_connection()
@@ -505,11 +538,12 @@ def rename_saved_record(
         """
         UPDATE saved_records
         SET label = ?
-        WHERE id = ?
+        WHERE id = ? AND session_id = ?
         """,
         (
             new_label,
-            record_id
+            record_id,
+            session_id
         )
     )
 
@@ -523,9 +557,9 @@ def rename_saved_record(
 
 
 
-def delete_saved_record(record_id: int):
+def delete_saved_record(session_id: str, record_id: int):
     """
-    Deletes saved record.
+    Deletes saved record, scoped to the given session.
     Appliance snapshots are deleted automatically
     because of ON DELETE CASCADE.
     """
@@ -537,9 +571,9 @@ def delete_saved_record(record_id: int):
     cursor.execute(
         """
         DELETE FROM saved_records
-        WHERE id = ?
+        WHERE id = ? AND session_id = ?
         """,
-        (record_id,)
+        (record_id, session_id)
     )
 
     connection.commit()
