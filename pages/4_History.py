@@ -49,6 +49,7 @@ st.set_page_config(
 )
 
 render_sidebar()
+session_id = st.session_state.session_id
 
 st.title("📚 Analysis History")
 
@@ -77,7 +78,7 @@ if "history_selected_id" not in st.session_state:
 
 try:
 
-    records = get_saved_records()
+    records = get_saved_records(session_id)
 
 except requests.ConnectionError:
 
@@ -152,7 +153,7 @@ else:
     record_id = st.session_state.history_selected_id
 
     try:
-        detail = get_saved_record(record_id)
+        detail = get_saved_record(session_id, record_id)
 
     except RuntimeError as error:
 
@@ -202,7 +203,7 @@ else:
         if st.button("Save Label", key=f"rename_btn_{record_id}"):
 
             try:
-                rename_saved_record(record_id, new_label)
+                rename_saved_record(session_id, record_id, new_label)
                 st.success("Label updated.")
                 st.rerun()
 
@@ -220,7 +221,7 @@ else:
         ):
 
             try:
-                delete_saved_record(record_id)
+                delete_saved_record(session_id, record_id)
                 st.session_state.history_selected_id = None
                 st.success("Record deleted.")
                 st.rerun()
