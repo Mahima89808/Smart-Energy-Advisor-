@@ -1,24 +1,20 @@
-"""
-Shared Sidebar Navigation
-Smart Energy Advisor
-
-Responsibility:
-- Render a consistent navigation block in every page's sidebar,
-  matching the bordered-card style used on the landing page.
-
-Streamlit's multipage sidebar only persists custom content on the
-page where st.sidebar is actually used in that page's own script —
-it does not carry over automatically to other pages. This function
-is called once near the top of every page so the sidebar looks the
-same everywhere, not just on the landing page.
-
-No:
-- Business logic
-- API calls
-- Database logic
-"""
+import uuid
 
 import streamlit as st
+
+
+def ensure_session_id() -> str:
+    """
+    Ensures this browser session has a unique session_id,
+    generating one on first visit and reusing it afterward.
+    Used to scope each user's appliances and saved records
+    so different browser sessions never see each other's data.
+    """
+
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
+
+    return st.session_state.session_id
 
 
 def render_sidebar() -> None:
@@ -28,6 +24,8 @@ def render_sidebar() -> None:
     description. Call once near the top of every page script
     (including Landing_Page.py).
     """
+
+    ensure_session_id()
 
     with st.sidebar:
 
