@@ -116,42 +116,48 @@ def extract_bill_manual(
 # Appliance CRUD
 # --------------------------------------------------
 
-def get_appliances():
+def get_appliances(session_id: str):
     return _request(
         "GET",
-        "/appliances"
+        "/appliances",
+        params={"session_id": session_id}
     )
 
 
 def create_appliance(
+    session_id: str,
     appliance: Dict[str, Any]
 ):
     return _request(
         "POST",
         "/appliances",
+        params={"session_id": session_id},
         json=appliance
     )
 
 
 def update_appliance(
+    session_id: str,
     appliance_id: int,
     appliance: Dict[str, Any]
 ):
     return _request(
         "PUT",
         f"/appliances/{appliance_id}",
+        params={"session_id": session_id},
         json=appliance
     )
 
 
 def delete_appliance(
+    session_id: str,
     appliance_id: int
 ):
     return _request(
         "DELETE",
-        f"/appliances/{appliance_id}"
+        f"/appliances/{appliance_id}",
+        params={"session_id": session_id}
     )
-
 
 # --------------------------------------------------
 # Suggestions
@@ -176,12 +182,14 @@ def generate_energy_suggestions(
 # --------------------------------------------------
 
 def save_record(
+    session_id: str,
     bill_data: Dict[str, Any],
     appliance_snapshot: List[Dict[str, Any]]
 ):
     return _request(
         "POST",
         "/saved-records",
+        params={"session_id": session_id},
         json={
             "bill_data": bill_data,
             "appliance_snapshot": appliance_snapshot
@@ -189,29 +197,34 @@ def save_record(
     )
 
 
-def get_saved_records():
+def get_saved_records(session_id: str):
     return _request(
         "GET",
-        "/saved-records"
+        "/saved-records",
+        params={"session_id": session_id}
     )
 
 
 def get_saved_record(
+    session_id: str,
     record_id: int
 ):
     return _request(
         "GET",
-        f"/saved-records/{record_id}"
+        f"/saved-records/{record_id}",
+        params={"session_id": session_id}
     )
 
 
 def rename_saved_record(
+    session_id: str,
     record_id: int,
     label: str
 ):
     return _request(
         "PATCH",
         f"/saved-records/{record_id}",
+        params={"session_id": session_id},
         json={
             "label": label
         }
@@ -219,9 +232,11 @@ def rename_saved_record(
 
 
 def delete_saved_record(
+    session_id: str,
     record_id: int
 ):
     return _request(
         "DELETE",
-        f"/saved-records/{record_id}"
+        f"/saved-records/{record_id}",
+        params={"session_id": session_id}
     )
