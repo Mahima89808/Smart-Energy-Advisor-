@@ -119,13 +119,14 @@ class ManualBillEntry(BaseModel):
 # --------------------------------------------------
 
 @app.get("/appliances")
-def read_appliances():
-    return get_all_appliances()
+def read_appliances(session_id: str):
+    return get_all_appliances(session_id)
 
 
 @app.post("/appliances")
-def add_appliance(appliance: ApplianceCreate):
+def add_appliance(appliance: ApplianceCreate, session_id: str):
     appliance_id = create_appliance(
+        session_id,
         appliance.name,
         appliance.category,
         appliance.wattage,
@@ -136,8 +137,9 @@ def add_appliance(appliance: ApplianceCreate):
 
 
 @app.put("/appliances/{appliance_id}")
-def edit_appliance(appliance_id: int, appliance: ApplianceCreate):
+def edit_appliance(appliance_id: int, appliance: ApplianceCreate, session_id: str):
     updated = update_appliance(
+        session_id,
         appliance_id,
         appliance.name,
         appliance.category,
@@ -151,10 +153,11 @@ def edit_appliance(appliance_id: int, appliance: ApplianceCreate):
 
 
 @app.delete("/appliances/{appliance_id}")
-def remove_appliance(appliance_id: int):
-    deleted = delete_appliance(appliance_id)
+def remove_appliance(appliance_id: int, session_id: str):
+    deleted = delete_appliance(session_id, appliance_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Appliance not found")
+    return {"success": True}
     return {"success": True}
 
 
@@ -195,35 +198,35 @@ def extract_bill_manual(entry: ManualBillEntry):
 # --------------------------------------------------
 
 @app.post("/saved-records")
-def save_record(record: SavedRecordCreate):
-    record_id = create_saved_record(record.bill_data, record.appliance_snapshot)
+def save_record(record: SavedRecordCreate, session_id: str):
+    record_id = create_saved_record(session_id, record.bill_data, record.appliance_snapshot)
     return {"success": True, "id": record_id}
 
 
 @app.get("/saved-records")
-def read_saved_records():
-    return get_saved_records()
+def read_saved_records(session_id: str):
+    return get_saved_records(session_id)
 
 
 @app.get("/saved-records/{record_id}")
-def read_saved_record(record_id: int):
-    record = get_saved_record_by_id(record_id)
+def read_saved_record(record_id: int, session_id: str):
+    record = get_saved_record_by_id(session_id, record_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Saved record not found")
     return record
 
 
 @app.patch("/saved-records/{record_id}")
-def rename_record(record_id: int, request: RenameRecordRequest):
-    updated = rename_saved_record(record_id, request.label)
+def rename_record(record_id: int, request: RenameRecordRequest, session_id: str):
+    updated = rename_saved_record(session_id, record_id, request.label)
     if not updated:
         raise HTTPException(status_code=404, detail="Saved record not found")
     return {"success": True}
 
 
 @app.delete("/saved-records/{record_id}")
-def remove_saved_record(record_id: int):
-    deleted = delete_saved_record(record_id)
+def remove_saved_record(record_id: int, session_id: str):
+    deleted = delete_saved_record(session_id, record_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Saved record not found")
     return {"success": True}
