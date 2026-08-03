@@ -42,7 +42,6 @@ st.set_page_config(
 
 render_sidebar()
 session_id = st.session_state.session_id
-st.caption(f"🔧 Debug — Session ID: {session_id}")
 
 st.title("🏠 Home - Upload & Extract Data")
 
