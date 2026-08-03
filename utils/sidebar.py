@@ -1,20 +1,44 @@
 import uuid
 
 import streamlit as st
+from streamlit_cookies_controller import CookieController
 
+_cookie_controller = None
+
+
+def _get_cookie_controller() -> CookieController:
+    """
+    Reuses a single CookieController instance per session instead
+    of creating a new one on every rerun.
+    """
+    global _cookie_controller
+    if _cookie_controller is None:
+        _cookie_controller = CookieController()
+    return _cookie_controller
 
 def ensure_session_id() -> str:
     """
-    Ensures this browser session has a unique session_id,
-    generating one on first visit and reusing it afterward.
-    Used to scope each user's appliances and saved records
-    so different browser sessions never see each other's data.
+    Ensures this browser has a unique session_id that survives
+    both page refreshes and page-to-page navigation, by storing
+    it in a browser cookie (st.session_state and st.query_params
+    both get cleared in these situations, cookies don't).
     """
 
-    if "session_id" not in st.session_state:
-        st.session_state.session_id = str(uuid.uuid4())
+    if "session_id" in st.session_state:
+        return st.session_state.session_id
 
-    return st.session_state.session_id
+    controller = _get_cookie_controller()
+    existing_session_id = controller.get("session_id")
+
+    if existing_session_id:
+        st.session_state.session_id = existing_session_id
+        return existing_session_id
+
+    new_session_id = str(uuid.uuid4())
+    st.session_state.session_id = new_session_id
+    controller.set("session_id", new_session_id)
+
+    return new_session_id
 
 
 def render_sidebar() -> None:
