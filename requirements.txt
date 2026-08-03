@@ -9,3 +9,4 @@ requests>=2.32.0
 httpx2
 python-multipart>=0.0.20
 pytest==9.1.1
+streamlit-cookies-controller
