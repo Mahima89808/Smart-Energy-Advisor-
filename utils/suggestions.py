@@ -19,7 +19,9 @@ through appliance_matcher.py
 
 from typing import Dict, List, Any
 
-from utils.analyze_data import analyze_appliance
+import pandas as pd
+
+from utils.analyze_data import analyze_appliances_dataframe, calculate_savings
 from utils.appliance_matcher import match_appliance
 
 
@@ -105,8 +107,17 @@ def generate_suggestion(
     bill_data: Dict[str, float]
 ) -> Dict[str, Any]:
     """
-    Generate suggestion for one appliance.
+    Generate suggestion for one appliance, analyzed in isolation.
+
+    NOTE: kept for backward compatibility (e.g. tests that call it
+    directly). Not used internally by generate_suggestions anymore,
+    since analyzing a single appliance in isolation causes its units
+    to be incorrectly scaled up to the full bill's metered units. Use
+    generate_suggestions() for correct, bill-reconciled results across
+    a full appliance list.
     """
+
+    from utils.analyze_data import analyze_appliance
 
     match_result = match_appliance(
         appliance.get(
@@ -162,15 +173,80 @@ def generate_suggestions(
 ) -> List[Dict[str, Any]]:
     """
     Generate suggestions for multiple appliances.
+
+    Analyzes the whole appliance list together first, so units and
+    cost are correctly scaled against the real bill total (not each
+    appliance individually pretending it's the only one on the bill).
+    Then matches each appliance to a rule and applies that specific
+    appliance's own saving_percentage on top of the shared, correctly
+    reconciled analysis.
     """
+
+    if not appliances:
+        return []
+
+    appliance_df = pd.DataFrame(appliances)
+
+    analyzed_df = analyze_appliances_dataframe(
+        appliance_df,
+        bill_data
+    )
 
     results = []
 
-    for appliance in appliances:
+    for _, row in analyzed_df.iterrows():
+
+        appliance = row.to_dict()
+
+        match_result = match_appliance(
+            appliance.get(
+                "name",
+                ""
+            )
+        )
+
+        if not match_result:
+            match_result = {
+                "match_type": "fallback",
+                "matched_name": "generic",
+                "rule": {
+                    "suggestion": {
+                        "action":
+                            "Reduce unnecessary usage and improve efficiency.",
+                        "saving_percentage": 0
+                    }
+                }
+            }
+
+        rule = match_result.get(
+            "rule",
+            {}
+        )
+
+        suggestion = rule.get(
+            "suggestion",
+            {}
+        )
+
+        saving_percentage = suggestion.get(
+            "saving_percentage",
+            0
+        )
+
+        savings = calculate_savings(
+            appliance["cost_per_month"],
+            saving_percentage
+        )
+
+        analysis = dict(appliance)
+        analysis["monthly_saving"] = savings["monthly_saving"]
+        analysis["yearly_saving"] = savings["yearly_saving"]
+
         results.append(
-            generate_suggestion(
+            format_suggestion(
                 appliance,
-                bill_data
+                match_result,
+                analysis
             )
         )
 
