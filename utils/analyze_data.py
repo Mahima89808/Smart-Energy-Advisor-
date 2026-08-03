@@ -126,6 +126,43 @@ def calculate_appliance_consumption(
 
     return df
 
+def scale_units_to_metered(
+    appliance_df: pd.DataFrame,
+    metered_units: float
+) -> pd.DataFrame:
+    """
+    Scales each appliance's estimated units so the total across
+    all appliances exactly matches the bill's real metered_units.
+
+    Why: wattage x hours_per_day x quantity is only ever a rough
+    estimate of real-world usage. Without this step, "Monthly
+    Units" and "Estimated Cost" can drift far from the actual
+    bill (e.g. if an appliance's assumed hours_per_day doesn't
+    match how it was really used that period).
+
+    This keeps each appliance's *relative* share of usage intact
+    (an AC assumed to run 8x more than a fan still shows 8x more
+    here) while forcing the *absolute* total to match reality.
+    """
+
+    df = appliance_df.copy()
+
+    estimated_total = df["units_per_month"].sum()
+
+    if estimated_total > 0 and metered_units > 0:
+        scaling_factor = metered_units / estimated_total
+    else:
+        scaling_factor = 0.0
+
+    df["units_per_day"] = (
+        df["units_per_day"] * scaling_factor
+    ).round(4)
+
+    df["units_per_month"] = (
+        df["units_per_month"] * scaling_factor
+    ).round(4)
+
+    return df
 
 def calculate_appliance_cost(
     appliance_df: pd.DataFrame,
@@ -261,6 +298,11 @@ def analyze_appliances_dataframe(
 
     df = calculate_appliance_consumption(
         appliance_df
+    )
+
+    df = scale_units_to_metered(
+        df,
+        bill_data["metered_units"]
     )
 
     df = calculate_appliance_cost(
