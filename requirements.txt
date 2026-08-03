@@ -6,7 +6,8 @@ numpy>=2.3.4
 pdfplumber>=0.11.8
 plotly>=6.4.0
 requests>=2.32.0
-httpx2
+httpx>=0.27.0
 python-multipart>=0.0.20
 pytest==9.1.1
 streamlit-cookies-controller
+psycopg2-binary>=2.9.9
