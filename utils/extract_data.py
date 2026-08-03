@@ -187,9 +187,9 @@ TABLE_FIELD_CANDIDATES_NUMERIC = {
     "current_reading": ["CURRENT READING"],
     "metered_units": ["METERED UNITS", "CONSUMPTION", "UNITS"],
     "total_amount": [
+        "CURRENT MONTH BILL",
         "TOTAL AMOUNT PAYABLE",
         "PAY TILL DUE DATE",
-        "CURRENT MONTH BILL",
         "NET BILL",
     ],
 }
