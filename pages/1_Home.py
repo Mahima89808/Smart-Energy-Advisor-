@@ -42,6 +42,7 @@ st.set_page_config(
 
 render_sidebar()
 session_id = st.session_state.session_id
+st.caption(f"🔧 Debug — Session ID: {session_id}")
 
 st.title("🏠 Home - Upload & Extract Data")
 
@@ -161,6 +162,13 @@ with left_column:
                 data=template_df.to_csv(index=False),
                 file_name="bill_template.csv",
                 mime="text/csv",
+            )
+
+
+            uploaded_bill = st.file_uploader(
+                "Upload Bill CSV",
+                type=["csv"],
+                key="csv_bill",
             )
 
             if uploaded_bill is not None:
