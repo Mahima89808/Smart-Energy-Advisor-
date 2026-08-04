@@ -367,7 +367,7 @@ with left_column:
     ):
 
         st.switch_page(
-            "pages/Analysis.py"
+            "pages/2_Analysis.py"
         )
 
 with right_column:
