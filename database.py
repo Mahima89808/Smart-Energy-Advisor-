@@ -1,6 +1,6 @@
 """
 Smart Energy Advisor
-SQLite Database Layer
+Postgres Database Layer (Supabase)
 
 Responsibilities:
 - Database connection management
@@ -13,31 +13,34 @@ No calculations.
 No UI logic.
 """
 
-import sqlite3
-from pathlib import Path
+
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
-BASE_DIR = Path(__file__).resolve().parent
+import psycopg2
+import psycopg2.extras
+import streamlit as st
 
-DATA_DIR = BASE_DIR / "data"
 
-DB_PATH = DATA_DIR / "energy_advisor.db"
+import os
+
+import psycopg2
+import psycopg2.extras
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_connection():
     """
-    Creates and returns a SQLite connection.
+    Creates and returns a Postgres connection (Supabase),
+    with rows returned as dict-like objects (so existing
+    code using dict(row) continues to work unchanged).
     """
 
-    DATA_DIR.mkdir(exist_ok=True)
-
-    connection = sqlite3.connect(DB_PATH)
-
-    connection.row_factory = sqlite3.Row
-
-    connection.execute(
-        "PRAGMA foreign_keys = ON"
+    connection = psycopg2.connect(
+        os.environ["SUPABASE_DB_URL"],
+        cursor_factory=psycopg2.extras.RealDictCursor
     )
 
     return connection
@@ -45,10 +48,17 @@ def get_connection():
 
 def _add_column_if_missing(connection, table: str, column: str, definition: str):
     cursor = connection.cursor()
-    cursor.execute(f"PRAGMA table_info({table})")
-    existing_columns = {row[1] for row in cursor.fetchall()}
+    cursor.execute(
+        """
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = %s AND column_name = %s
+        """,
+        (table, column)
+    )
+    exists = cursor.fetchone()
 
-    if column not in existing_columns:
+    if not exists:
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
         connection.commit()
 
@@ -66,7 +76,7 @@ def initialize_database():
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS appliances (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             session_id TEXT NOT NULL DEFAULT '',
             name TEXT NOT NULL,
             category TEXT,
@@ -82,7 +92,7 @@ def initialize_database():
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS saved_records (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             session_id TEXT NOT NULL DEFAULT '',
             label TEXT NOT NULL,
             consumer_no TEXT,
@@ -103,7 +113,7 @@ def initialize_database():
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS saved_record_appliances (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
 
             saved_record_id INTEGER NOT NULL,
 
@@ -159,7 +169,8 @@ def create_appliance(
             created_at,
             updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
         """,
         (
             session_id,
@@ -173,9 +184,9 @@ def create_appliance(
         )
     )
 
-    connection.commit()
+    appliance_id = cursor.fetchone()["id"]
 
-    appliance_id = cursor.lastrowid
+    connection.commit()
 
     connection.close()
 
@@ -195,7 +206,7 @@ def get_all_appliances(session_id: str):
         """
         SELECT *
         FROM appliances
-        WHERE session_id = ?
+        WHERE session_id = %s
         ORDER BY id ASC
         """,
         (session_id,)
@@ -222,7 +233,7 @@ def get_appliance_by_id(session_id: str, appliance_id: int):
         """
         SELECT *
         FROM appliances
-        WHERE id = ? AND session_id = ?
+        WHERE id = %s AND session_id = %s
         """,
         (appliance_id, session_id)
     )
@@ -261,13 +272,13 @@ def update_appliance(
         """
         UPDATE appliances
         SET
-            name = ?,
-            category = ?,
-            wattage = ?,
-            hours_per_day = ?,
-            quantity = ?,
-            updated_at = ?
-        WHERE id = ? AND session_id = ?
+            name = %s,
+            category = %s,
+            wattage = %s,
+            hours_per_day = %s,
+            quantity = %s,
+            updated_at = %s
+        WHERE id = %s AND session_id = %s
         """,
         (
             name,
@@ -302,7 +313,7 @@ def delete_appliance(session_id: str, appliance_id: int):
     cursor.execute(
         """
         DELETE FROM appliances
-        WHERE id = ? AND session_id = ?
+        WHERE id = %s AND session_id = %s
         """,
         (appliance_id, session_id)
     )
@@ -350,6 +361,7 @@ def create_saved_record(
 
             else:
                 label = f"Saved Analysis {saved_time[:10]}"
+
         cursor.execute(
             """
             INSERT INTO saved_records
@@ -368,11 +380,12 @@ def create_saved_record(
                 source_type,
                 saved_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
             """,
             (
                 session_id,
-                label,   
+                label,
                 bill_data.get("consumer_no"),
                 bill_data.get("consumer_name"),
                 bill_data.get("bill_month"),
@@ -387,11 +400,7 @@ def create_saved_record(
             )
         )
 
-        saved_record_id = cursor.lastrowid
-
-        # (keep everything below this exactly as it was — the
-        # saved_record_appliances loop, commit, except, finally)
-
+        saved_record_id = cursor.fetchone()["id"]
 
         for appliance in appliance_snapshot:
 
@@ -406,7 +415,7 @@ def create_saved_record(
                     hours_per_day,
                     quantity
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 """,
                 (
                     saved_record_id,
@@ -418,18 +427,15 @@ def create_saved_record(
                 )
             )
 
-
         connection.commit()
 
         return saved_record_id
-
 
     except Exception:
 
         connection.rollback()
 
         raise
-
 
     finally:
 
@@ -450,7 +456,7 @@ def get_saved_records(session_id: str):
         """
         SELECT *
         FROM saved_records
-        WHERE session_id = ?
+        WHERE session_id = %s
         ORDER BY id DESC
         """,
         (session_id,)
@@ -475,18 +481,16 @@ def get_saved_record_by_id(session_id: str, record_id: int):
 
     cursor = connection.cursor()
 
-
     cursor.execute(
         """
         SELECT *
         FROM saved_records
-        WHERE id = ? AND session_id = ?
+        WHERE id = %s AND session_id = %s
         """,
         (record_id, session_id)
     )
 
     record = cursor.fetchone()
-
 
     if record is None:
 
@@ -494,21 +498,18 @@ def get_saved_record_by_id(session_id: str, record_id: int):
 
         return None
 
-
     cursor.execute(
         """
         SELECT *
         FROM saved_record_appliances
-        WHERE saved_record_id = ?
+        WHERE saved_record_id = %s
         """,
         (record_id,)
     )
 
     appliances = cursor.fetchall()
 
-
     connection.close()
-
 
     return {
         "record": dict(record),
@@ -537,8 +538,8 @@ def rename_saved_record(
     cursor.execute(
         """
         UPDATE saved_records
-        SET label = ?
-        WHERE id = ? AND session_id = ?
+        SET label = %s
+        WHERE id = %s AND session_id = %s
         """,
         (
             new_label,
@@ -571,7 +572,7 @@ def delete_saved_record(session_id: str, record_id: int):
     cursor.execute(
         """
         DELETE FROM saved_records
-        WHERE id = ? AND session_id = ?
+        WHERE id = %s AND session_id = %s
         """,
         (record_id, session_id)
     )
