@@ -21,6 +21,7 @@ Uses:
 
 from contextlib import asynccontextmanager
 from typing import List, Dict, Any, Optional
+from fastapi.middleware.cors import CORSMiddleware
 
 
 from fastapi import (
@@ -75,6 +76,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --------------------------------------------------
 # Request Models
