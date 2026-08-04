@@ -26,7 +26,8 @@ from utils.sidebar import render_sidebar
 # Landing Page Content
 # --------------------------------------------------
 
-def render_landing() -> None:
+def render_landing() -> None:   
+    # ensure_session_id()
 
     st.set_page_config(
         page_title="Smart Energy Advisor",
@@ -290,7 +291,7 @@ history_page = st.Page(
 )
 
 about_page = st.Page(
-    "pages/_About.py",
+    "_About.py",
     title="About",
     icon="ℹ️",
     visibility="hidden"
