@@ -108,7 +108,7 @@ The application operates completely on your local machine using:
 
 - Streamlit frontend
 - FastAPI backend
-- SQLite database
+- Supabase PostgreSQL database
 - JSON-based knowledge engine
 
 No cloud services, external APIs, or online AI services are required.
