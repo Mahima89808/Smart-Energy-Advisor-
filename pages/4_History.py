@@ -318,35 +318,35 @@ else:
 
             st.plotly_chart(
                 create_consumption_pie_chart(analysis_df),
-                use_container_width=True
+                width="stretch"
             )
 
         with right_chart:
 
             st.plotly_chart(
                 create_consumption_bar_chart(analysis_df),
-                use_container_width=True
+                width="stretch"
             )
 
         st.subheader("Cost Analysis")
 
         st.plotly_chart(
             create_cost_comparison_chart(analysis_df),
-            use_container_width=True
+            width="stretch"
         )
 
         st.subheader("Bill Contribution")
 
         st.plotly_chart(
             create_bill_share_chart(analysis_df),
-            use_container_width=True
+            width="stretch"
         )
 
         st.subheader("Daily vs Monthly Consumption")
 
         st.plotly_chart(
             create_daily_vs_monthly_chart(analysis_df),
-            use_container_width=True
+            width="stretch"
         )
 
         st.divider()
@@ -386,7 +386,7 @@ else:
 
         st.dataframe(
             display_df,
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )
 

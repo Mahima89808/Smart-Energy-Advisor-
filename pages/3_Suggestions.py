@@ -289,7 +289,7 @@ summary_df = summary_df[
 
 st.dataframe(
     summary_df,
-    use_container_width=True,
+    width="stretch",
     hide_index=True
 )
 

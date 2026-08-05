@@ -197,7 +197,7 @@ with left_chart:
 
     st.plotly_chart(
         pie_chart,
-        use_container_width=True
+        width="stretch"
     )
 
 with right_chart:
@@ -208,7 +208,7 @@ with right_chart:
 
     st.plotly_chart(
         bar_chart,
-        use_container_width=True
+        width="stretch"
     )
 
 
@@ -227,7 +227,7 @@ cost_chart = create_cost_comparison_chart(
 
 st.plotly_chart(
     cost_chart,
-    use_container_width=True
+    width="stretch"
 )
 
 
@@ -246,7 +246,7 @@ bill_share_chart = create_bill_share_chart(
 
 st.plotly_chart(
     bill_share_chart,
-    use_container_width=True
+    width="stretch"
 )
 
 
@@ -265,7 +265,7 @@ daily_monthly_chart = create_daily_vs_monthly_chart(
 
 st.plotly_chart(
     daily_monthly_chart,
-    use_container_width=True
+    width="stretch"
 )
 
 st.divider()
@@ -316,7 +316,7 @@ display_df = display_df.sort_values(
 
 st.dataframe(
     display_df,
-    use_container_width=True,
+    width="stretch",
     hide_index=True
 )
 

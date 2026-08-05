@@ -316,7 +316,7 @@ with right_column:
         with prev_col:
             st.write("")
             st.write("")
-            if st.button("📋 Previous Appliances List", use_container_width=True):
+            if st.button("📋 Previous Appliances List", width="stretch"):
                 try:
                     saved_appliances = get_appliances(session_id)
                     if saved_appliances:
@@ -380,7 +380,7 @@ with right_column:
         edited_df = st.data_editor(
             original_appliance_df,
             num_rows="dynamic",
-            use_container_width=True,
+            width="stretch",
             key=f"appliance_editor_{st.session_state.appliance_editor_version}",
             column_config={
                 "id": st.column_config.NumberColumn("ID", disabled=True),
