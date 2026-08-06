@@ -1,249 +1,439 @@
-# Smart AI Energy Advisor System ⚡
+<p align="center">
+  <h1 align="center">⚡ Smart Energy Advisor</h1>
+  <p align="center">
+    A cloud-based electricity consumption analysis system built with Streamlit, FastAPI, and Supabase.
+  </p>
+</p>
 
-An intelligent, AI-powered Streamlit web application that analyzes electricity bills and appliance usage data to provide personalized energy-saving recommendations.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue.svg">
+  <img src="https://img.shields.io/badge/Streamlit-Frontend-red.svg">
+  <img src="https://img.shields.io/badge/FastAPI-Backend-green.svg">
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E.svg">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
+</p>
+
+---
 
 ## 🎯 Overview
 
-The Smart AI Energy Advisor System helps households and businesses:
-- 📊 Analyze energy consumption patterns
-- 💰 Identify opportunities to save money
-- 🌍 Reduce carbon footprint
-- 💡 Get AI-powered recommendations
+**Smart Energy Advisor** is a cloud-based application that helps users analyze household electricity consumption, estimate appliance-wise energy usage, visualize usage patterns, and receive practical, rule-based recommendations for improving energy efficiency.
+
+The application follows a modern three-tier architecture: a **Streamlit** frontend communicates with a **FastAPI** backend, which securely handles all data operations with a **Supabase PostgreSQL** database.
+
+With Smart Energy Advisor, users can:
+
+- 📊 Analyze household electricity consumption
+- ⚡ Estimate appliance-wise energy usage
+- 💰 Calculate appliance operating costs
+- 📈 Visualize electricity consumption trends
+- 💡 Receive rule-based energy-saving recommendations
+- 📚 Store and review historical analyses
+
+---
 
 ## ✨ Features
 
-### 📄 Bill Analysis
-- Extract data from PDF electricity bills automatically
-- Parse consumer details, billing dates, and consumption data
-- Support for various bill formats
+### 📄 Electricity Bill Management
+- Upload electricity bills in PDF format
+- Import bill information from CSV files
+- Manual bill entry
+- Automatic bill data validation
 
-### 📊 Consumption Analysis
-- Appliance-wise energy breakdown
-- Interactive visualizations with Plotly
-- Daily, monthly, and annual cost calculations
-- Consumption category classification
+### 🔌 Appliance Management
+- Upload appliance information via CSV
+- Store appliance wattage, quantity, and usage hours
+- Manage appliance records
+- Appliance-wise energy consumption analysis
 
-### 💡 AI Recommendations
-- Personalized energy-saving suggestions
-- Energy hog detection (appliances consuming >10% total energy)
-- Potential savings calculator
-- Step-by-step action plans
+### 📊 Energy Analysis
+Automatically calculates:
+- Electricity tariff
+- Daily and monthly energy consumption
+- Monthly operating cost per appliance
+- Appliance contribution to the electricity bill
+- Estimated monthly and yearly savings
 
-### 📈 Advanced Analytics
-- Efficiency scoring (0-100 scale)
-- Consumption pattern analysis
-- Calculated vs actual consumption comparison
-- Environmental impact tracking (CO₂ reduction)
+### 📈 Interactive Visualizations
+- Appliance energy comparison
+- Monthly consumption charts
+- Electricity cost comparison
+- Bill contribution charts
+- Savings projections
+- Energy efficiency indicators
 
-## 🏗️ Project Structure
+### 💡 Rule-Based Recommendations
+- Appliance-specific energy-saving suggestions
+- Monthly and yearly savings estimation
+- Practical energy conservation tips
+- Knowledge-base driven recommendations (no ML required)
 
-```
-smart_ai_energy_advisor/
-│
-├── app.py                      # Main Streamlit application entry point
-├── pages/
-│   ├── 1_Home.py              # File upload and data extraction
-│   ├── 2_Analysis.py          # Energy consumption analysis
-│   ├── 3_Suggestions.py       # AI-powered recommendations
-│   └── 4_About.py             # About and user guide
-│
-├── utils/
-│   ├── extract_data.py        # PDF extraction utilities
-│   ├── analyze_data.py        # Analysis and calculations
-│   └── visualize.py           # Plotly visualizations
-│
-├── data/
-│   ├── sample_bill.txt        # Sample electricity bill
-│   ├── appliance_data.csv     # Sample appliance data
-│
-├── requirements.txt           # Python dependencies
-└── README.md                  # Project documentation
-```
+---
 
-## 📦 Dependencies
+## 🧭 How It Works
 
-- **streamlit**: Web application framework
-- **pandas**: Data manipulation and analysis
-- **numpy**: Numerical computations
-- **pdfplumber**: PDF text extraction
-- **pytesseract**: OCR for scanned documents
-- **plotly**: Interactive data visualizations
-- **scikit-learn**: Machine learning and pattern analysis
+1. **Upload Electricity Bill** — Provide bill data via PDF, CSV, or manual entry on the **Home** page. The app validates the input automatically.
+2. **Upload Appliance Information** — Upload a CSV with appliance details (see format below).
+3. **Analyze Consumption** — The **Analysis** page calculates tariff, daily/monthly consumption, appliance-wise cost, bill contribution, and estimated savings, all shown through interactive charts.
+4. **View Suggestions** — The **Suggestions** page surfaces appliance-specific, rule-based energy-saving tips with estimated savings.
+5. **Save and Review** — Save completed analyses and review them anytime on the **History** page.
 
-## 🚀 Getting Started
+### Appliance CSV Format
 
-### Installation
-
-1. Clone or download the project
-2. Install dependencies:
-```bash
-pip install streamlit pandas numpy pdfplumber pytesseract plotly scikit-learn
-```
-
-### Running the Application
-
-```bash
-streamlit run app.py --server.port 5000
-```
-
-The application will open in your browser at `http://localhost:5000`
-
-## 📖 How to Use
-
-### Step 1: Upload Data (Home Page)
-
-1. **Upload Electricity Bill**: Upload your PDF electricity bill
-   - The system automatically extracts consumer details, billing dates, units consumed, and total amount
-   
-2. **Upload Appliance Data**: Upload a CSV file with your appliance usage
-   - Required columns: `appliance`, `wattage`, `hours_per_day`, `quantity`
-   - Or use the sample data to explore features
-
-### Step 2: View Analysis (Analysis Page)
-
-- View comprehensive consumption overview
-- See efficiency score and metrics
-- Explore interactive charts:
-  - Energy distribution pie chart
-  - Consumption comparison bar chart
-  - Cost vs consumption analysis
-  - Category breakdown
-- Review top energy consumers
-- Download detailed reports
-
-### Step 3: Get Recommendations (Suggestions Page)
-
-- View personalized energy-saving recommendations
-- Calculate potential savings with interactive slider
-- Get action plans:
-  - Immediate actions (this week)
-  - Short-term goals (this month)
-  - Long-term plans (3-6 months)
-- See environmental impact (CO₂ reduction)
-
-### Step 4: Learn More (About Page)
-
-- Understand how the system works
-- Read the comprehensive user guide
-- Troubleshooting tips
-- FAQ section
-
-## 📊 Sample Data
-
-The project includes sample data to help you get started:
-
-### Sample Appliance Data CSV
+| Column          | Description            | Example         |
+|-----------------|------------------------|-----------------|
+| `appliance`     | Appliance name         | Air Conditioner |
+| `wattage`       | Power rating (Watts)   | 1500            |
+| `hours_per_day` | Daily usage hours      | 8               |
+| `quantity`      | Number of appliances   | 2               |
 
 ```csv
 appliance,wattage,hours_per_day,quantity
 Air Conditioner,1500,8,2
-Refrigerator,150,24,1
-Washing Machine,500,1,1
+Refrigerator,180,24,1
 Television,100,5,2
-...
+Ceiling Fan,75,10,4
+Washing Machine,500,1,1
 ```
-
-### Required CSV Format
-
-| Column | Description | Example |
-|--------|-------------|---------|
-| appliance | Name of the appliance | Air Conditioner |
-| wattage | Power consumption in watts | 1500 |
-| hours_per_day | Average daily usage hours | 8 |
-| quantity | Number of units | 2 |
-
-## 🧮 How Calculations Work
-
-### Energy Consumption
-```
-Daily Consumption (kWh) = (Wattage × Hours × Quantity) / 1000
-Monthly Consumption (kWh) = Daily Consumption × 30
-```
-
-### Cost Calculation
-```
-Monthly Cost (₹) = Monthly Consumption × Rate per kWh
-(Default rate: ₹6.50/kWh)
-```
-
-### Efficiency Score
-```
-Coefficient of Variation = (Std Dev / Mean) × 100
-Efficiency Score = max(0, 100 - Coefficient of Variation)
-```
-
-Higher score = more balanced consumption across appliances
-
-## 💡 Energy Saving Tips
-
-### Quick Wins
-- Switch to LED bulbs (75% energy savings)
-- Set AC to 24-26°C
-- Unplug devices when not in use
-- Use smart power strips
-
-### Long-term Investments
-- 5-star rated appliances
-- Solar water heater
-- Inverter-based appliances
-- Solar panels
-
-## 🌍 Environmental Impact
-
-The system calculates environmental benefits:
-- CO₂ emissions reduced (kg)
-- Equivalent trees planted
-- Carbon footprint reduction
-
-**Formula**: ~0.82 kg CO₂ per kWh (India average)
-
-## 🔧 Troubleshooting
-
-### PDF Extraction Issues
-- Ensure PDF contains text (not just scanned images)
-- Check PDF is not password-protected
-- Try the sample bill to test features
-
-### CSV Upload Fails
-- Verify all required columns are present
-- Check column names spelling
-- Ensure numeric values don't contain text
-
-### Unexpected Analysis Results
-- Verify appliance wattage is correct
-- Check hours_per_day are realistic (0-24)
-- Confirm quantity values
-
-## 🚀 Future Enhancements
-
-- 🔮 Predictive analytics with ML models
-- 📱 Mobile app version
-- 🔔 Smart alerts for consumption spikes
-- 📅 Historical tracking across months
-- 🌤️ Weather data integration
-- 🏆 Gamification features
-- 🔌 IoT smart meter integration
-
-## 📝 License
-
-This project is open-source and available for educational and commercial use.
-
-## 🙏 Acknowledgments
-
-Built with:
-- Python & Streamlit
-- Plotly for visualizations
-- PDFPlumber for PDF extraction
-- Pandas for data analysis
-
-## 📧 Support
-
-For questions, feedback, or support, please refer to the About page in the application.
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2024  
-**Made with**: ❤️ and AI
+## 🧮 Energy Consumption Calculations
 
-Start your journey towards energy efficiency today! 💚
+**Daily Consumption (kWh)**
+```
+= (Wattage × Hours per Day × Quantity) ÷ 1000
+```
+
+**Monthly Consumption (kWh)**
+```
+= Daily Consumption × 30
+```
+
+**Electricity Tariff (₹/kWh)**
+```
+= Total Bill Amount ÷ Metered Units
+```
+
+**Monthly Appliance Cost (₹)**
+```
+= Monthly Consumption × Tariff
+```
+
+**Appliance Bill Contribution (%)**
+```
+= (Appliance Cost ÷ Total Bill) × 100
+```
+
+---
+
+## 💡 Recommendation Engine
+
+The recommendation engine is entirely **rule-based** — no machine learning is involved. Recommendations are generated from predefined appliance rules stored in a JSON knowledge base at `backend/knowledge/appliance_rules.json`.
+
+**Workflow:**
+
+```
+User Appliance
+      │
+      ▼
+Normalize Appliance Name
+      │
+      ▼
+Appliance Matcher
+      │
+      ▼
+Knowledge Base
+      │
+      ▼
+Recommendation Rules
+      │
+      ▼
+Estimated Savings
+```
+
+Each recommendation may include:
+- Suggested improvements
+- Better operating practices
+- Monthly and yearly savings estimates
+
+The knowledge base contains appliance synonyms, categories, recommendation rules, saving percentages, and generic fallback rules. **Adding support for a new appliance only requires updating the JSON file — no application code changes are needed.**
+
+---
+
+## ☁️ Architecture
+
+```
+User
+  │
+  ▼
+Streamlit Community Cloud (Frontend)
+  │
+  ▼
+FastAPI Backend (Render)
+  │
+  ├──────────────┬──────────────────────┐
+  ▼              ▼                      ▼
+Energy      Recommendation         Supabase
+Analysis        Engine             PostgreSQL
+```
+
+The Streamlit frontend never communicates directly with the database — all operations flow through the FastAPI backend, which improves security, maintainability, and scalability. An active internet connection is required since all three components are cloud-hosted.
+
+---
+
+## 🏗️ Project Structure
+
+```text
+Smart_Energy_Advisor/
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── knowledge/
+│   │   └── appliance_rules.json
+│   └── utils/
+│       ├── analyze_data.py
+│       ├── api_client.py
+│       ├── appliance_matcher.py
+│       ├── extract_data.py
+│       ├── suggestions.py
+│       └── visualizations.py
+│
+├── pages/
+│   ├── 1_Home.py
+│   ├── 2_Analysis.py
+│   ├── 3_Suggestions.py
+│   └── 4_History.py
+│
+├── data/
+├── tests/
+├── Landing_Page.py
+├── _About.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 🛠️ Technology Stack
+
+**Frontend**
+- Streamlit — interactive web application framework
+- Plotly — interactive charts and visualizations
+- Pandas — data manipulation and analysis
+
+**Backend**
+- FastAPI — REST API development
+- Uvicorn — ASGI web server
+- Pydantic — data validation and serialization
+
+**Database**
+- Supabase PostgreSQL — cloud-hosted relational database
+
+**Data Processing**
+- NumPy — numerical computations
+- pdfplumber — PDF text extraction
+
+**Deployment**
+- Streamlit Community Cloud — frontend hosting
+- Render — backend hosting
+- Supabase — database hosting
+
+> **Note:** The project no longer uses OCR or image-processing libraries such as OpenCV or pytesseract.
+
+### Dependencies
+
+| Library    | Purpose                     |
+|------------|-----------------------------|
+| Streamlit  | Frontend web application    |
+| FastAPI    | Backend REST API            |
+| Uvicorn    | API server                  |
+| Pandas     | Data processing             |
+| NumPy      | Numerical calculations      |
+| Plotly     | Interactive visualizations  |
+| pdfplumber | PDF bill extraction         |
+| Pydantic   | Data validation             |
+| Requests   | API communication           |
+| Supabase   | Database integration        |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.10 or later
+- Git
+- A Supabase project
+- An active internet connection
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/<your-username>/Smart_Energy_Advisor.git
+cd Smart_Energy_Advisor
+```
+
+### 2. Create a Virtual Environment
+
+**Windows**
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+**Linux / macOS**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+
+Create a `.env` file in the project root (or backend directory, if applicable):
+
+```env
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_KEY=your_supabase_anon_key
+BACKEND_URL=http://localhost:8000
+```
+
+Replace the placeholder values with your own Supabase project credentials.
+
+### 5. Run the Application
+
+**Start the backend:**
+```bash
+uvicorn backend.main:app --reload
+```
+Runs at `http://localhost:8000`
+
+**Start the frontend** (in a new terminal):
+```bash
+streamlit run Landing_Page.py
+```
+The app will open automatically in your default browser.
+
+---
+
+## ☁️ Deployment
+
+| Component | Platform                    |
+|-----------|-----------------------------|
+| Frontend  | Streamlit Community Cloud   |
+| Backend   | Render                      |
+| Database  | Supabase PostgreSQL         |
+
+**Deployment Flow**
+
+```
+User
+  │
+  ▼
+Streamlit Community Cloud
+  │
+  ▼
+FastAPI Backend (Render)
+  │
+  ▼
+Supabase PostgreSQL
+  │
+  ▼
+Response Returned to User
+```
+
+Since the application communicates with cloud-hosted services, an active internet connection is required.
+
+**Live Application**
+- Frontend: *(add your Streamlit Cloud URL here)*
+- Backend API: *(add your Render API URL here)*
+- Database: Supabase PostgreSQL
+
+---
+
+## 🔧 Troubleshooting
+
+**PDF Upload Issues**
+- Ensure the PDF contains selectable text
+- Verify the PDF is not password protected
+- Check that the uploaded file is not corrupted
+
+**CSV Upload Issues**
+- Verify all required columns are present: `appliance`, `wattage`, `hours_per_day`, `quantity`
+- Ensure column names are correctly spelled
+- Confirm `wattage`, `quantity`, and usage hours contain numeric values
+
+**Backend Connection Issues**
+- Verify the Render backend is running
+- Check that the backend URL is correctly configured
+- Ensure your internet connection is active
+
+**Database Connection Issues**
+- Verify Supabase credentials are correctly configured
+- Check that the database service is online
+- Confirm the required tables exist
+
+---
+
+## 🚀 Future Enhancements
+
+- 📈 Historical electricity bill comparison
+- 📊 Monthly and yearly consumption trends
+- 📄 Export analysis reports (PDF/Excel)
+- 📱 Mobile-responsive interface
+- 🌐 Multi-user authentication
+- 🔔 Smart energy usage alerts
+- 🔌 Smart meter integration
+- ☀️ Renewable energy usage tracking
+- 📉 Advanced dashboard analytics
+- 🤖 Enhanced recommendation rules
+
+---
+
+## 📌 Version
+
+| Component               | Version                             |
+|-------------------------|-------------------------------------|
+| Application             | 1.0.0                               |
+| Frontend                | Streamlit                           |
+| Backend                 | FastAPI                             |
+| Database                | Supabase PostgreSQL                 |
+| Deployment              | Streamlit Community Cloud + Render  |
+| Recommendation Engine   | Rule-Based JSON                     |
+
+---
+
+## 🙏 Acknowledgements
+
+Smart Energy Advisor was developed as a software engineering project to demonstrate modern full-stack Python application development, showcasing:
+
+- Streamlit web application development
+- FastAPI REST API development
+- Cloud database integration with Supabase PostgreSQL
+- Cloud deployment using Streamlit Community Cloud and Render
+- Rule-based recommendation systems
+- Interactive data visualization with Plotly
+- Modular software architecture
+- RESTful client-server communication
+
+Special thanks to the open-source community and the developers of Python, Streamlit, FastAPI, Supabase, Plotly, Pandas, NumPy, pdfplumber, and Uvicorn.
+
+---
+
+## ⭐ Support
+
+If you found this project useful, consider giving it a **⭐ Star** on GitHub. Feedback, suggestions, and contributions are always welcome.
+
+## 📬 Contact
+
+Questions, suggestions, or collaboration ideas? Open an issue or submit a pull request through the GitHub repository.
+
+---
+
+<p align="center"><b>⚡ Smart Energy Advisor — Analyze Smarter. Save Energy. Reduce Costs.</b></p>
