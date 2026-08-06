@@ -112,7 +112,6 @@ The application operates completely on your local machine using:
 - Supabase PostgreSQL database
 - JSON-based knowledge engine
 
-No cloud services, external APIs, or online AI services are required.
 """
     )
 
@@ -137,10 +136,6 @@ No cloud services, external APIs, or online AI services are required.
 Current Support
 
 - PDF electricity bill upload
-
-Planned Support
-
-- Image OCR
 - CSV import
 - Manual bill entry
 
@@ -251,7 +246,7 @@ Planned Support
     # ----------------------------------------
 
     st.caption(
-        "Smart Energy Advisor • Offline Electricity Consumption Analysis System"
+        "Smart Energy Advisor • Electricity Consumption Analysis System"
     )
 
 
