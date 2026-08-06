@@ -10,7 +10,6 @@
   <img src="https://img.shields.io/badge/Streamlit-Frontend-red.svg">
   <img src="https://img.shields.io/badge/FastAPI-Backend-green.svg">
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E.svg">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
 </p>
 
 ---
@@ -425,11 +424,6 @@ Smart Energy Advisor was developed as a software engineering project to demonstr
 Special thanks to the open-source community and the developers of Python, Streamlit, FastAPI, Supabase, Plotly, Pandas, NumPy, pdfplumber, and Uvicorn.
 
 ---
-
-## ⭐ Support
-
-If you found this project useful, consider giving it a **⭐ Star** on GitHub. Feedback, suggestions, and contributions are always welcome.
-
 ## 📬 Contact
 
 Questions, suggestions, or collaboration ideas? Open an issue or submit a pull request through the GitHub repository.
